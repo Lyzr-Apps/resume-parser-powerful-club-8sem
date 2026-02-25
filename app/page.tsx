@@ -1182,7 +1182,27 @@ export default function Page() {
       const result = await callAIAgent(message, ATS_AGENT_ID)
 
       if (result.success && result?.response?.result) {
-        setAtsResult(result.response.result as unknown as ATSScoreResult)
+        const atsData = result.response.result as unknown as ATSScoreResult
+        setAtsResult(atsData)
+
+        // Sync: if optimizer result exists, update its original_estimated_score to match
+        // This ensures consistency between ATS Score tab and Optimizer tab
+        if (atsData?.overall_score != null) {
+          setOptimizerResult((prev) => {
+            if (prev) {
+              return {
+                ...prev,
+                ats_improvement_estimate: {
+                  ...prev.ats_improvement_estimate,
+                  original_estimated_score: atsData.overall_score,
+                  improvement_points: prev.ats_improvement_estimate.optimized_estimated_score - atsData.overall_score,
+                },
+              }
+            }
+            return prev
+          })
+        }
+
         setActiveTab('ats')
       } else {
         setAtsError(result?.error ?? 'Failed to analyze ATS score. Please try again.')
@@ -1234,7 +1254,45 @@ export default function Page() {
       const result = await callAIAgent(message, OPTIMIZER_AGENT_ID)
 
       if (result.success && result?.response?.result) {
-        setOptimizerResult(result.response.result as unknown as ResumeOptimizerResult)
+        const optResult = result.response.result as unknown as ResumeOptimizerResult
+        setOptimizerResult(optResult)
+
+        // Sync ATS score: update the ATS result to match the optimizer's original score
+        // This ensures consistency between the ATS Score tab and the Optimizer tab
+        if (optResult?.ats_improvement_estimate?.original_estimated_score != null) {
+          setAtsResult((prev) => {
+            if (prev) {
+              return {
+                ...prev,
+                overall_score: optResult.ats_improvement_estimate.original_estimated_score,
+                summary: prev.summary + '\n\nNote: Overall score updated to align with the Resume Optimizer\'s assessment for consistency.',
+              }
+            }
+            // If no prior ATS result, create a minimal one from the optimizer's estimate
+            return {
+              overall_score: optResult.ats_improvement_estimate.original_estimated_score,
+              category_scores: {
+                keyword_optimization: 0,
+                formatting_structure: 0,
+                experience_relevance: 0,
+                skills_coverage: 0,
+                education_certifications: 0,
+                quantifiable_achievements: 0,
+                content_quality: 0,
+              },
+              strengths: [],
+              weaknesses: [],
+              suggestions: [],
+              keyword_analysis: {
+                matched_keywords: [],
+                missing_keywords: [],
+                keyword_density_score: 0,
+              },
+              summary: `Original ATS score estimated at ${optResult.ats_improvement_estimate.original_estimated_score}/100 by the Resume Optimizer. Run a full ATS analysis for detailed category breakdowns and suggestions.`,
+            }
+          })
+        }
+
         setActiveTab('optimized')
       } else {
         setOptimizerError(result?.error ?? 'Failed to optimize resume. Please try again.')
