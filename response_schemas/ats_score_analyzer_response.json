@@ -1,0 +1,82 @@
+{
+  "agent_name": "ATS Score Analyzer",
+  "agent_id": "699ec7789a2868b8ab9f7a8f",
+  "description": "Analyzes a parsed resume against ATS best practices and optionally against a specific job description. Provides an overall ATS compatibility score (0-100), category scores, detailed strengths, weaknesses, and actionable improvement suggestions.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "overall_score": "number",
+    "category_scores": {
+      "keyword_optimization": "number",
+      "formatting_structure": "number",
+      "experience_relevance": "number",
+      "skills_coverage": "number",
+      "education_certifications": "number",
+      "quantifiable_achievements": "number",
+      "content_quality": "number"
+    },
+    "strengths": [
+      "string"
+    ],
+    "weaknesses": [
+      "string"
+    ],
+    "suggestions": [
+      {
+        "category": "string",
+        "priority": "string",
+        "current": "string",
+        "recommended": "string",
+        "impact": "string"
+      }
+    ],
+    "keyword_analysis": {
+      "matched_keywords": [
+        "string"
+      ],
+      "missing_keywords": [
+        "string"
+      ],
+      "keyword_density_score": "number"
+    },
+    "summary": "string"
+  },
+  "example_response": {
+    "overall_score": 0,
+    "category_scores": {
+      "keyword_optimization": 0,
+      "formatting_structure": 0,
+      "experience_relevance": 0,
+      "skills_coverage": 0,
+      "education_certifications": 0,
+      "quantifiable_achievements": 0,
+      "content_quality": 0
+    },
+    "strengths": [
+      "sample string"
+    ],
+    "weaknesses": [
+      "sample string"
+    ],
+    "suggestions": [
+      {
+        "category": "sample string",
+        "priority": "sample string",
+        "current": "sample string",
+        "recommended": "sample string",
+        "impact": "sample string"
+      }
+    ],
+    "keyword_analysis": {
+      "matched_keywords": [
+        "sample string"
+      ],
+      "missing_keywords": [
+        "sample string"
+      ],
+      "keyword_density_score": 0
+    },
+    "summary": "sample string"
+  }
+}

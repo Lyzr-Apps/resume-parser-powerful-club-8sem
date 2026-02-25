@@ -1,0 +1,192 @@
+{
+  "agent_name": "Resume Optimizer",
+  "agent_id": "699ec779fb412608ab723762",
+  "description": "Optimizes and rewrites resume content based on a target job description to maximize ATS compatibility. Produces an improved version of the resume with better keyword alignment, stronger action verbs, and restructured content \u2014 all while preserving factual accuracy from the original resume.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "optimized_resume": {
+      "contact_info": {
+        "full_name": "string",
+        "email": "string",
+        "phone": "string",
+        "location": "string",
+        "linkedin_url": "string",
+        "portfolio_url": "string",
+        "github_url": "string"
+      },
+      "professional_summary": "string",
+      "skills": [
+        {
+          "skill_name": "string",
+          "proficiency_level": "string",
+          "years_of_experience": "string"
+        }
+      ],
+      "work_experience": [
+        {
+          "company_name": "string",
+          "job_title": "string",
+          "start_date": "string",
+          "end_date": "string",
+          "location": "string",
+          "responsibilities": [
+            "string"
+          ],
+          "achievements": [
+            "string"
+          ]
+        }
+      ],
+      "education": [
+        {
+          "institution": "string",
+          "degree": "string",
+          "field_of_study": "string",
+          "start_date": "string",
+          "end_date": "string",
+          "gpa": "string",
+          "honors": "string"
+        }
+      ],
+      "certifications": [
+        {
+          "name": "string",
+          "issuing_organization": "string",
+          "date_obtained": "string",
+          "expiry_date": "string",
+          "credential_id": "string"
+        }
+      ],
+      "languages": [
+        {
+          "language": "string",
+          "proficiency": "string"
+        }
+      ],
+      "projects": [
+        {
+          "project_name": "string",
+          "description": "string",
+          "technologies_used": [
+            "string"
+          ],
+          "url": "string"
+        }
+      ]
+    },
+    "changes_made": [
+      {
+        "section": "string",
+        "original": "string",
+        "optimized": "string",
+        "reason": "string"
+      }
+    ],
+    "ats_improvement_estimate": {
+      "original_estimated_score": "number",
+      "optimized_estimated_score": "number",
+      "improvement_points": "number"
+    },
+    "optimization_summary": "string",
+    "keywords_added": [
+      "string"
+    ],
+    "keywords_emphasized": [
+      "string"
+    ]
+  },
+  "example_response": {
+    "optimized_resume": {
+      "contact_info": {
+        "full_name": "sample",
+        "email": "sample",
+        "phone": "sample",
+        "location": "sample",
+        "linkedin_url": "sample",
+        "portfolio_url": "sample",
+        "github_url": "sample"
+      },
+      "professional_summary": "sample",
+      "skills": [
+        {
+          "skill_name": "sample string",
+          "proficiency_level": "sample",
+          "years_of_experience": "sample"
+        }
+      ],
+      "work_experience": [
+        {
+          "company_name": "sample",
+          "job_title": "sample",
+          "start_date": "sample",
+          "end_date": "sample",
+          "location": "sample",
+          "responsibilities": [
+            "sample string"
+          ],
+          "achievements": [
+            "sample string"
+          ]
+        }
+      ],
+      "education": [
+        {
+          "institution": "sample",
+          "degree": "sample",
+          "field_of_study": "sample",
+          "start_date": "sample",
+          "end_date": "sample",
+          "gpa": "sample",
+          "honors": "sample"
+        }
+      ],
+      "certifications": [
+        {
+          "name": "sample",
+          "issuing_organization": "sample",
+          "date_obtained": "sample",
+          "expiry_date": "sample",
+          "credential_id": "sample"
+        }
+      ],
+      "languages": [
+        {
+          "language": "sample string",
+          "proficiency": "sample"
+        }
+      ],
+      "projects": [
+        {
+          "project_name": "sample",
+          "description": "sample",
+          "technologies_used": [
+            "sample string"
+          ],
+          "url": "sample"
+        }
+      ]
+    },
+    "changes_made": [
+      {
+        "section": "sample string",
+        "original": "sample string",
+        "optimized": "sample string",
+        "reason": "sample string"
+      }
+    ],
+    "ats_improvement_estimate": {
+      "original_estimated_score": 0,
+      "optimized_estimated_score": 0,
+      "improvement_points": 0
+    },
+    "optimization_summary": "sample string",
+    "keywords_added": [
+      "sample string"
+    ],
+    "keywords_emphasized": [
+      "sample string"
+    ]
+  }
+}

@@ -7,15 +7,39 @@
       "nodeCategory": "input"
     },
     {
+      "id": "jd_input_node",
+      "type": "Input",
+      "label": "Job Description Input",
+      "nodeCategory": "input"
+    },
+    {
       "id": "resume_parser_agent",
       "type": "Agent",
       "label": "Resume Parser Agent",
       "nodeCategory": "agent"
     },
     {
+      "id": "ats_scorer_agent",
+      "type": "Agent",
+      "label": "ATS Score Analyzer",
+      "nodeCategory": "agent"
+    },
+    {
+      "id": "cover_letter_agent",
+      "type": "Agent",
+      "label": "Cover Letter Generator",
+      "nodeCategory": "agent"
+    },
+    {
+      "id": "resume_optimizer_agent",
+      "type": "Agent",
+      "label": "Resume Optimizer",
+      "nodeCategory": "agent"
+    },
+    {
       "id": "output_node",
       "type": "Output",
-      "label": "Parsed JSON Profile",
+      "label": "Results Output",
       "nodeCategory": "end"
     }
   ],
@@ -26,6 +50,38 @@
     },
     {
       "source": "resume_parser_agent",
+      "target": "ats_scorer_agent"
+    },
+    {
+      "source": "resume_parser_agent",
+      "target": "cover_letter_agent"
+    },
+    {
+      "source": "resume_parser_agent",
+      "target": "resume_optimizer_agent"
+    },
+    {
+      "source": "jd_input_node",
+      "target": "cover_letter_agent"
+    },
+    {
+      "source": "jd_input_node",
+      "target": "resume_optimizer_agent"
+    },
+    {
+      "source": "jd_input_node",
+      "target": "ats_scorer_agent"
+    },
+    {
+      "source": "ats_scorer_agent",
+      "target": "output_node"
+    },
+    {
+      "source": "cover_letter_agent",
+      "target": "output_node"
+    },
+    {
+      "source": "resume_optimizer_agent",
       "target": "output_node"
     }
   ]

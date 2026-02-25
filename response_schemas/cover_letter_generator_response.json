@@ -1,0 +1,36 @@
+{
+  "agent_name": "Cover Letter Generator",
+  "agent_id": "699ec77863b93379f288d2f2",
+  "description": "Generates a professional, tailored cover letter based on the candidate's parsed resume data and a specific job description. Uses only factual information from the resume \u2014 never fabricates or hallucinate details.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "cover_letter": "string",
+    "key_highlights": [
+      "string"
+    ],
+    "tone": "string",
+    "word_count": "number",
+    "matched_qualifications": [
+      "string"
+    ],
+    "customization_notes": [
+      "string"
+    ]
+  },
+  "example_response": {
+    "cover_letter": "sample string",
+    "key_highlights": [
+      "sample string"
+    ],
+    "tone": "sample string",
+    "word_count": 0,
+    "matched_qualifications": [
+      "sample string"
+    ],
+    "customization_notes": [
+      "sample string"
+    ]
+  }
+}

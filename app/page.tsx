@@ -11,13 +11,18 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import {
   FiUpload, FiFile, FiCopy, FiDownload, FiTrash2,
-  FiClock, FiChevronLeft, FiChevronRight, FiX, FiCheck,
+  FiClock, FiX, FiCheck,
   FiAlertCircle, FiUser, FiMail, FiPhone, FiMapPin,
   FiLinkedin, FiGithub, FiGlobe, FiBookOpen, FiAward,
-  FiBriefcase, FiCode
+  FiBriefcase, FiCode, FiTarget, FiFileText, FiZap,
+  FiTrendingUp, FiChevronDown, FiChevronUp, FiArrowRight,
+  FiCheckCircle, FiAlertTriangle, FiStar
 } from 'react-icons/fi'
+import { HiSparkles } from 'react-icons/hi2'
 
 // ──────────────────────────────────────────
 // TypeScript Interfaces
@@ -99,11 +104,80 @@ interface ParseHistoryItem {
   rawJson: string
 }
 
+interface CategoryScores {
+  keyword_optimization: number
+  formatting_structure: number
+  experience_relevance: number
+  skills_coverage: number
+  education_certifications: number
+  quantifiable_achievements: number
+  content_quality: number
+}
+
+interface ATSSuggestion {
+  category: string
+  priority: string
+  current: string
+  recommended: string
+  impact: string
+}
+
+interface KeywordAnalysis {
+  matched_keywords: string[]
+  missing_keywords: string[]
+  keyword_density_score: number
+}
+
+interface ATSScoreResult {
+  overall_score: number
+  category_scores: CategoryScores
+  strengths: string[]
+  weaknesses: string[]
+  suggestions: ATSSuggestion[]
+  keyword_analysis: KeywordAnalysis
+  summary: string
+}
+
+interface CoverLetterResult {
+  cover_letter: string
+  key_highlights: string[]
+  tone: string
+  word_count: number
+  matched_qualifications: string[]
+  customization_notes: string[]
+}
+
+interface ChangesMade {
+  section: string
+  original: string
+  optimized: string
+  reason: string
+}
+
+interface ATSImprovementEstimate {
+  original_estimated_score: number
+  optimized_estimated_score: number
+  improvement_points: number
+}
+
+interface ResumeOptimizerResult {
+  optimized_resume: ParsedResume
+  changes_made: ChangesMade[]
+  ats_improvement_estimate: ATSImprovementEstimate
+  optimization_summary: string
+  keywords_added: string[]
+  keywords_emphasized: string[]
+}
+
 // ──────────────────────────────────────────
 // Constants
 // ──────────────────────────────────────────
 
-const AGENT_ID = '699ec2e39a2868b8ab9f774a'
+const PARSER_AGENT_ID = '699ec2e39a2868b8ab9f774a'
+const ATS_AGENT_ID = '699ec7789a2868b8ab9f7a8f'
+const COVER_LETTER_AGENT_ID = '699ec77863b93379f288d2f2'
+const OPTIMIZER_AGENT_ID = '699ec779fb412608ab723762'
+
 const HISTORY_KEY = 'resumeforge_history'
 const MAX_HISTORY = 20
 
@@ -129,11 +203,18 @@ const THEME_VARS = {
   '--radius': '0.875rem',
 } as React.CSSProperties
 
+const AGENTS_INFO = [
+  { id: PARSER_AGENT_ID, name: 'Resume Parser', desc: 'Extracts structured data from resumes' },
+  { id: ATS_AGENT_ID, name: 'ATS Score Analyzer', desc: 'Scores resume for ATS compatibility' },
+  { id: COVER_LETTER_AGENT_ID, name: 'Cover Letter Generator', desc: 'Creates tailored cover letters' },
+  { id: OPTIMIZER_AGENT_ID, name: 'Resume Optimizer', desc: 'Optimizes resume for target JD' },
+]
+
 // ──────────────────────────────────────────
 // Sample Data
 // ──────────────────────────────────────────
 
-const SAMPLE_DATA: ParsedResume = {
+const SAMPLE_RESUME: ParsedResume = {
   contact_info: {
     full_name: 'Alexandra Chen',
     email: 'alexandra.chen@email.com',
@@ -236,6 +317,112 @@ const SAMPLE_DATA: ParsedResume = {
   ],
 }
 
+const SAMPLE_ATS: ATSScoreResult = {
+  overall_score: 78,
+  category_scores: {
+    keyword_optimization: 72,
+    formatting_structure: 90,
+    experience_relevance: 85,
+    skills_coverage: 70,
+    education_certifications: 82,
+    quantifiable_achievements: 80,
+    content_quality: 75,
+  },
+  strengths: [
+    'Strong quantifiable achievements with specific metrics (40% load time improvement, 35% cost reduction)',
+    'Well-structured work experience with clear responsibilities and achievements separation',
+    'Relevant certifications from major cloud providers (AWS, GCP)',
+    'Diverse technical skill set covering full-stack development',
+  ],
+  weaknesses: [
+    'Professional summary could be more targeted to specific roles',
+    'Missing some industry-standard keywords for senior engineering roles',
+    'Skills section lacks categorization (frontend vs backend vs devops)',
+    'No mention of specific Agile/Scrum methodology experience',
+  ],
+  suggestions: [
+    {
+      category: 'Keywords',
+      priority: 'high',
+      current: 'Generic skill listing without context',
+      recommended: 'Add role-specific keywords like "system design", "microservices", "CI/CD pipeline"',
+      impact: 'Could improve ATS keyword matching by 15-20%',
+    },
+    {
+      category: 'Summary',
+      priority: 'medium',
+      current: 'Broad professional summary',
+      recommended: 'Tailor summary to include target job title and 2-3 key differentiators',
+      impact: 'Increases recruiter engagement in first 6 seconds',
+    },
+    {
+      category: 'Skills',
+      priority: 'low',
+      current: 'Flat skills list',
+      recommended: 'Group skills into categories: Languages, Frameworks, Cloud, DevOps, Databases',
+      impact: 'Improves readability and ATS section parsing',
+    },
+  ],
+  keyword_analysis: {
+    matched_keywords: ['React', 'Node.js', 'TypeScript', 'AWS', 'PostgreSQL', 'GraphQL', 'Docker', 'CI/CD', 'Kubernetes'],
+    missing_keywords: ['system design', 'microservices', 'REST API', 'Agile', 'Scrum', 'TDD', 'monitoring', 'observability'],
+    keyword_density_score: 68,
+  },
+  summary: 'This resume demonstrates strong technical experience and quantifiable achievements. The main areas for improvement are keyword optimization and better alignment with common ATS parsing patterns. With targeted adjustments, the ATS score could improve to 85-90.',
+}
+
+const SAMPLE_COVER_LETTER: CoverLetterResult = {
+  cover_letter: 'Dear Hiring Manager,\n\nI am writing to express my strong interest in the Senior Software Engineer position at your company. With over 8 years of experience building scalable web applications and leading engineering teams, I am confident in my ability to make a significant contribution to your organization.\n\nIn my current role as Senior Software Engineer at Streamline AI, I have architected core data pipelines processing over 2 million events daily and led a team of 5 engineers in a complete frontend platform redesign that improved load times by 40%. My expertise in React, Node.js, and cloud-native architectures aligns directly with your technical requirements.\n\nAt DataVault Inc., I built real-time analytics dashboards serving 50,000+ daily active users and designed APIs that powered both mobile and web clients. I have a proven track record of shipping features that drive measurable business impact, including a 22% improvement in user retention.\n\nI hold AWS Solutions Architect and Google Cloud Professional Developer certifications, demonstrating my commitment to staying current with cloud technologies. My experience with CI/CD pipelines, containerization, and auto-scaling has consistently delivered cost savings and improved deployment velocity.\n\nI would welcome the opportunity to discuss how my experience and skills can contribute to your team. Thank you for your consideration.\n\nSincerely,\nAlexandra Chen',
+  key_highlights: [
+    '8+ years of full-stack engineering experience',
+    'Led teams and mentored junior developers to promotion',
+    'Quantifiable impact: 40% load time improvement, 35% cost reduction',
+    'Cloud certifications from AWS and Google',
+  ],
+  tone: 'Professional',
+  word_count: 223,
+  matched_qualifications: [
+    'Full-stack development with React and Node.js',
+    'Cloud infrastructure experience (AWS, GCP)',
+    'Team leadership and mentoring',
+    'Performance optimization and scalability',
+  ],
+  customization_notes: [
+    'Emphasized cloud certifications to match cloud-first requirement',
+    'Highlighted quantifiable achievements to demonstrate impact',
+    'Focused on leadership experience for senior-level positioning',
+  ],
+}
+
+const SAMPLE_OPTIMIZER: ResumeOptimizerResult = {
+  optimized_resume: {
+    ...SAMPLE_RESUME,
+    professional_summary: 'Results-driven Senior Full-Stack Engineer with 8+ years of experience architecting scalable microservices and cloud-native web applications. Expert in React, Node.js, TypeScript, and AWS with a track record of leading cross-functional engineering teams, driving 40% performance improvements, and reducing infrastructure costs by 35%. Passionate about system design, developer experience, and building high-performing teams through mentorship.',
+  },
+  changes_made: [
+    {
+      section: 'Professional Summary',
+      original: 'Senior Full-Stack Engineer with 8+ years of experience building scalable web applications and distributed systems.',
+      optimized: 'Results-driven Senior Full-Stack Engineer with 8+ years of experience architecting scalable microservices and cloud-native web applications.',
+      reason: 'Added action-oriented language and specific keywords like "microservices" and "cloud-native" for better ATS matching.',
+    },
+    {
+      section: 'Skills',
+      original: 'Flat list of skills without categorization',
+      optimized: 'Categorized skills with emphasis on system design and microservices architecture',
+      reason: 'ATS systems better parse categorized skill sections and look for architecture-level keywords.',
+    },
+  ],
+  ats_improvement_estimate: {
+    original_estimated_score: 78,
+    optimized_estimated_score: 91,
+    improvement_points: 13,
+  },
+  optimization_summary: 'The resume has been optimized with stronger action verbs, better keyword alignment, and more targeted language for senior engineering positions. Key improvements include a rewritten professional summary with specific metrics, enhanced skill categorization, and added industry-standard keywords throughout.',
+  keywords_added: ['microservices', 'system design', 'cross-functional', 'cloud-native', 'REST API', 'Agile'],
+  keywords_emphasized: ['scalable', 'performance', 'leadership', 'CI/CD', 'mentorship', 'architecture'],
+}
+
 // ──────────────────────────────────────────
 // Utility Helpers
 // ──────────────────────────────────────────
@@ -253,7 +440,6 @@ function syntaxHighlightJson(json: string): React.ReactNode[] {
     let remaining = line
     let keyIdx = 0
 
-    // Match key-value pairs, standalone values, brackets, etc.
     const keyRegex = /("(?:[^"\\]|\\.)*")\s*:/
     const stringRegex = /("(?:[^"\\]|\\.)*")/
     const numberRegex = /\b(\d+\.?\d*)\b/
@@ -269,7 +455,6 @@ function syntaxHighlightJson(json: string): React.ReactNode[] {
       const boolMatch = remaining.match(boolRegex)
       const nullMatch = remaining.match(nullRegex)
 
-      // Find earliest match
       type MatchInfo = { index: number; length: number; type: string; value: string }
       const matches: MatchInfo[] = []
 
@@ -357,6 +542,59 @@ function formatInline(text: string) {
   )
 }
 
+function getScoreColor(score: number): string {
+  if (score >= 80) return 'text-emerald-600'
+  if (score >= 60) return 'text-amber-500'
+  if (score >= 40) return 'text-orange-500'
+  return 'text-red-500'
+}
+
+function getScoreBgColor(score: number): string {
+  if (score >= 80) return 'bg-emerald-500'
+  if (score >= 60) return 'bg-amber-500'
+  if (score >= 40) return 'bg-orange-500'
+  return 'bg-red-500'
+}
+
+function getScoreStroke(score: number): string {
+  if (score >= 80) return '#10b981'
+  if (score >= 60) return '#f59e0b'
+  if (score >= 40) return '#f97316'
+  return '#ef4444'
+}
+
+function getPriorityColor(priority: string): string {
+  const p = (priority ?? '').toLowerCase()
+  if (p === 'high') return 'bg-red-100 text-red-700 border-red-200'
+  if (p === 'medium') return 'bg-amber-100 text-amber-700 border-amber-200'
+  return 'bg-blue-100 text-blue-700 border-blue-200'
+}
+
+// ──────────────────────────────────────────
+// Glass style helper
+// ──────────────────────────────────────────
+
+const GLASS_STYLE: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.75)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  borderColor: 'rgba(255,255,255,0.18)',
+  borderRadius: '0.875rem',
+}
+
+// ──────────────────────────────────────────
+// Spinner
+// ──────────────────────────────────────────
+
+function Spinner({ className }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className ?? 'h-4 w-4'}`} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  )
+}
+
 // ──────────────────────────────────────────
 // ErrorBoundary
 // ──────────────────────────────────────────
@@ -389,7 +627,7 @@ class ErrorBoundary extends React.Component<
 }
 
 // ──────────────────────────────────────────
-// Sub-Components
+// Resume Sub-Components
 // ──────────────────────────────────────────
 
 function ContactInfoSection({ contact }: { contact?: ContactInfo }) {
@@ -625,12 +863,116 @@ function LoadingSkeleton() {
           ))}
         </div>
       </div>
-      <Separator />
-      <div className="space-y-3">
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-32 w-full" />
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// ATS Score Circle SVG
+// ──────────────────────────────────────────
+
+function ScoreCircle({ score }: { score: number }) {
+  const safeScore = typeof score === 'number' ? Math.max(0, Math.min(100, score)) : 0
+  const radius = 54
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference - (safeScore / 100) * circumference
+  const strokeColor = getScoreStroke(safeScore)
+
+  return (
+    <div className="relative w-36 h-36 mx-auto">
+      <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+        <circle cx="60" cy="60" r={radius} fill="none" stroke={strokeColor} strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`text-3xl font-bold ${getScoreColor(safeScore)}`}>{safeScore}</span>
+        <span className="text-xs text-muted-foreground">/ 100</span>
       </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Category Score Bar
+// ──────────────────────────────────────────
+
+function CategoryScoreBar({ label, score }: { label: string; score: number }) {
+  const safeScore = typeof score === 'number' ? Math.max(0, Math.min(100, score)) : 0
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium capitalize">{label.replace(/_/g, ' ')}</span>
+        <span className={`text-xs font-semibold ${getScoreColor(safeScore)}`}>{safeScore}</span>
+      </div>
+      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-700 ${getScoreBgColor(safeScore)}`} style={{ width: `${safeScore}%` }} />
+      </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Resume Summary Renderer (reusable)
+// ──────────────────────────────────────────
+
+function ResumeSummaryView({ data }: { data: ParsedResume }) {
+  return (
+    <div className="space-y-6">
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiUser className="w-4 h-4 text-muted-foreground" />Contact Information
+        </h3>
+        <ContactInfoSection contact={data?.contact_info} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiBookOpen className="w-4 h-4 text-muted-foreground" />Professional Summary
+        </h3>
+        {data?.professional_summary ? renderMarkdown(data.professional_summary) : <p className="text-sm text-muted-foreground italic">No professional summary provided.</p>}
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiCode className="w-4 h-4 text-muted-foreground" />Skills
+        </h3>
+        <SkillsSection skills={data?.skills} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiBriefcase className="w-4 h-4 text-muted-foreground" />Work Experience
+        </h3>
+        <ExperienceSection experience={data?.work_experience} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiBookOpen className="w-4 h-4 text-muted-foreground" />Education
+        </h3>
+        <EducationSection education={data?.education} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiAward className="w-4 h-4 text-muted-foreground" />Certifications
+        </h3>
+        <CertificationsSection certifications={data?.certifications} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiGlobe className="w-4 h-4 text-muted-foreground" />Languages
+        </h3>
+        <LanguagesSection languages={data?.languages} />
+      </section>
+      <Separator />
+      <section>
+        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <FiCode className="w-4 h-4 text-muted-foreground" />Projects
+        </h3>
+        <ProjectsSection projects={data?.projects} />
+      </section>
     </div>
   )
 }
@@ -640,20 +982,43 @@ function LoadingSkeleton() {
 // ──────────────────────────────────────────
 
 export default function Page() {
-  // ── State ──
+  // ── Core State ──
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [parsedData, setParsedData] = useState<ParsedResume | null>(null)
   const [rawJson, setRawJson] = useState<string>('')
+  const [jobDescription, setJobDescription] = useState<string>('')
   const [activeTab, setActiveTab] = useState('summary')
   const [copied, setCopied] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [history, setHistory] = useState<ParseHistoryItem[]>([])
   const [showSample, setShowSample] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [jdExpanded, setJdExpanded] = useState(true)
+
+  // ── Loading States ──
+  const [parsingLoading, setParsingLoading] = useState(false)
+  const [atsLoading, setAtsLoading] = useState(false)
+  const [coverLetterLoading, setCoverLetterLoading] = useState(false)
+  const [optimizerLoading, setOptimizerLoading] = useState(false)
+
+  // ── Result States ──
+  const [atsResult, setAtsResult] = useState<ATSScoreResult | null>(null)
+  const [coverLetterResult, setCoverLetterResult] = useState<CoverLetterResult | null>(null)
+  const [optimizerResult, setOptimizerResult] = useState<ResumeOptimizerResult | null>(null)
+
+  // ── Error States ──
+  const [parseError, setParseError] = useState<string | null>(null)
+  const [atsError, setAtsError] = useState<string | null>(null)
+  const [coverLetterError, setCoverLetterError] = useState<string | null>(null)
+  const [optimizerError, setOptimizerError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  // ── Active Agent ──
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null)
+
+  // ── Copied States for different sections ──
+  const [copiedCoverLetter, setCopiedCoverLetter] = useState(false)
+  const [copiedOptimized, setCopiedOptimized] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -684,14 +1049,25 @@ export default function Page() {
   // ── Handle Sample Data Toggle ──
   useEffect(() => {
     if (showSample) {
-      setParsedData(SAMPLE_DATA)
-      setRawJson(JSON.stringify(SAMPLE_DATA, null, 2))
-      setError(null)
-      setSuccessMsg('Showing sample data.')
+      setParsedData(SAMPLE_RESUME)
+      setRawJson(JSON.stringify(SAMPLE_RESUME, null, 2))
+      setAtsResult(SAMPLE_ATS)
+      setCoverLetterResult(SAMPLE_COVER_LETTER)
+      setOptimizerResult(SAMPLE_OPTIMIZER)
+      setParseError(null)
+      setAtsError(null)
+      setCoverLetterError(null)
+      setOptimizerError(null)
+      setSuccessMsg('Showing sample data with all agent results.')
+      setJobDescription('Senior Software Engineer at a fast-growing startup. Requirements: 5+ years experience with React, Node.js, TypeScript. Cloud experience (AWS/GCP). Team leadership. System design skills.')
     } else {
       setParsedData(null)
       setRawJson('')
+      setAtsResult(null)
+      setCoverLetterResult(null)
+      setOptimizerResult(null)
       setSuccessMsg(null)
+      setJobDescription('')
     }
   }, [showSample])
 
@@ -705,12 +1081,12 @@ export default function Page() {
     const validExt = /\.(pdf|docx?)$/i
 
     if (!validTypes.includes(file.type) && !validExt.test(file.name)) {
-      setError('Invalid file type. Please upload a PDF or Word document (.pdf, .docx).')
+      setParseError('Invalid file type. Please upload a PDF or Word document (.pdf, .docx).')
       return
     }
 
     setSelectedFile(file)
-    setError(null)
+    setParseError(null)
     setSuccessMsg(null)
   }, [])
 
@@ -734,27 +1110,28 @@ export default function Page() {
   // ── Parse Resume ──
   const handleParse = async () => {
     if (!selectedFile) return
-    setLoading(true)
-    setError(null)
+    setParsingLoading(true)
+    setParseError(null)
     setSuccessMsg(null)
     setParsedData(null)
     setRawJson('')
-    setActiveAgentId(AGENT_ID)
+    setAtsResult(null)
+    setCoverLetterResult(null)
+    setOptimizerResult(null)
+    setActiveAgentId(PARSER_AGENT_ID)
 
     try {
-      // Step 1: Upload file
       const uploadResult = await uploadFiles(selectedFile)
       if (!uploadResult.success || (uploadResult.asset_ids?.length ?? 0) === 0) {
-        setError('Failed to upload file. Please try again.')
-        setLoading(false)
+        setParseError('Failed to upload file. Please try again.')
+        setParsingLoading(false)
         setActiveAgentId(null)
         return
       }
 
-      // Step 2: Call agent with asset_ids
       const result = await callAIAgent(
         'Parse this resume document and extract all fields into structured ATS-optimized JSON. Extract contact info, professional summary, skills with proficiency levels, work experience with responsibilities and achievements, education, certifications, languages, and projects. Use null for any missing or ambiguous fields.',
-        AGENT_ID,
+        PARSER_AGENT_ID,
         { assets: uploadResult.asset_ids }
       )
 
@@ -766,12 +1143,10 @@ export default function Page() {
         setSuccessMsg('Resume parsed successfully.')
         setShowSample(false)
 
-        // Determine status
         const hasContact = parsed?.contact_info?.full_name || parsed?.contact_info?.email
         const hasExperience = Array.isArray(parsed?.work_experience) && parsed.work_experience.length > 0
         const status: 'success' | 'partial' = hasContact && hasExperience ? 'success' : 'partial'
 
-        // Save to history
         const newItem: ParseHistoryItem = {
           id: String(Date.now()),
           fileName: selectedFile.name,
@@ -782,13 +1157,93 @@ export default function Page() {
         }
         saveHistory([newItem, ...history])
       } else {
-        setError(result?.error ?? 'Failed to parse resume. Please ensure it is a valid PDF or Word document.')
+        setParseError(result?.error ?? 'Failed to parse resume. Please ensure it is a valid PDF or Word document.')
       }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+    } catch {
+      setParseError('An unexpected error occurred. Please try again.')
     }
 
-    setLoading(false)
+    setParsingLoading(false)
+    setActiveAgentId(null)
+  }
+
+  // ── ATS Score Analysis ──
+  const handleATSAnalysis = async () => {
+    if (!parsedData) return
+    setAtsLoading(true)
+    setAtsError(null)
+    setActiveAgentId(ATS_AGENT_ID)
+
+    try {
+      const message = jobDescription.trim()
+        ? `Analyze this resume for ATS compatibility against the following job description.\n\nRESUME DATA:\n${JSON.stringify(parsedData, null, 2)}\n\nJOB DESCRIPTION:\n${jobDescription}`
+        : `Analyze this resume for general ATS compatibility.\n\nRESUME DATA:\n${JSON.stringify(parsedData, null, 2)}`
+
+      const result = await callAIAgent(message, ATS_AGENT_ID)
+
+      if (result.success && result?.response?.result) {
+        setAtsResult(result.response.result as unknown as ATSScoreResult)
+        setActiveTab('ats')
+      } else {
+        setAtsError(result?.error ?? 'Failed to analyze ATS score. Please try again.')
+      }
+    } catch {
+      setAtsError('An unexpected error occurred during ATS analysis.')
+    }
+
+    setAtsLoading(false)
+    setActiveAgentId(null)
+  }
+
+  // ── Cover Letter Generation ──
+  const handleCoverLetter = async () => {
+    if (!parsedData || !jobDescription.trim()) return
+    setCoverLetterLoading(true)
+    setCoverLetterError(null)
+    setActiveAgentId(COVER_LETTER_AGENT_ID)
+
+    try {
+      const message = `Generate a professional cover letter based on this resume and job description. Use ONLY information from the resume — do NOT fabricate any details.\n\nRESUME DATA:\n${JSON.stringify(parsedData, null, 2)}\n\nJOB DESCRIPTION:\n${jobDescription}`
+
+      const result = await callAIAgent(message, COVER_LETTER_AGENT_ID)
+
+      if (result.success && result?.response?.result) {
+        setCoverLetterResult(result.response.result as unknown as CoverLetterResult)
+        setActiveTab('coverletter')
+      } else {
+        setCoverLetterError(result?.error ?? 'Failed to generate cover letter. Please try again.')
+      }
+    } catch {
+      setCoverLetterError('An unexpected error occurred during cover letter generation.')
+    }
+
+    setCoverLetterLoading(false)
+    setActiveAgentId(null)
+  }
+
+  // ── Resume Optimization ──
+  const handleOptimize = async () => {
+    if (!parsedData || !jobDescription.trim()) return
+    setOptimizerLoading(true)
+    setOptimizerError(null)
+    setActiveAgentId(OPTIMIZER_AGENT_ID)
+
+    try {
+      const message = `Optimize this resume for the following job description. Improve keyword alignment, strengthen action verbs, and restructure content for better ATS compatibility. Use ONLY factual information from the original resume.\n\nORIGINAL RESUME DATA:\n${JSON.stringify(parsedData, null, 2)}\n\nTARGET JOB DESCRIPTION:\n${jobDescription}`
+
+      const result = await callAIAgent(message, OPTIMIZER_AGENT_ID)
+
+      if (result.success && result?.response?.result) {
+        setOptimizerResult(result.response.result as unknown as ResumeOptimizerResult)
+        setActiveTab('optimized')
+      } else {
+        setOptimizerError(result?.error ?? 'Failed to optimize resume. Please try again.')
+      }
+    } catch {
+      setOptimizerError('An unexpected error occurred during resume optimization.')
+    }
+
+    setOptimizerLoading(false)
     setActiveAgentId(null)
   }
 
@@ -797,9 +1252,17 @@ export default function Page() {
     setSelectedFile(null)
     setParsedData(null)
     setRawJson('')
-    setError(null)
+    setParseError(null)
+    setAtsError(null)
+    setCoverLetterError(null)
+    setOptimizerError(null)
     setSuccessMsg(null)
     setShowSample(false)
+    setAtsResult(null)
+    setCoverLetterResult(null)
+    setOptimizerResult(null)
+    setJobDescription('')
+    setActiveTab('summary')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -828,15 +1291,71 @@ export default function Page() {
     URL.revokeObjectURL(url)
   }
 
+  // ── Copy Cover Letter ──
+  const handleCopyCoverLetter = async () => {
+    const text = coverLetterResult?.cover_letter
+    if (!text) return
+    const success = await copyToClipboard(text)
+    if (success) {
+      setCopiedCoverLetter(true)
+      setTimeout(() => setCopiedCoverLetter(false), 2000)
+    }
+  }
+
+  // ── Download Cover Letter ──
+  const handleDownloadCoverLetter = () => {
+    const text = coverLetterResult?.cover_letter
+    if (!text) return
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'cover_letter.txt'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // ── Copy Optimized JSON ──
+  const handleCopyOptimized = async () => {
+    if (!optimizerResult?.optimized_resume) return
+    const jsonStr = JSON.stringify(optimizerResult.optimized_resume, null, 2)
+    const success = await copyToClipboard(jsonStr)
+    if (success) {
+      setCopiedOptimized(true)
+      setTimeout(() => setCopiedOptimized(false), 2000)
+    }
+  }
+
+  // ── Download Optimized JSON ──
+  const handleDownloadOptimized = () => {
+    if (!optimizerResult?.optimized_resume) return
+    const jsonStr = JSON.stringify(optimizerResult.optimized_resume, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'optimized_resume.json'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   // ── Load from History ──
   const loadHistoryItem = (item: ParseHistoryItem) => {
     setParsedData(item.data)
     setRawJson(item.rawJson)
     setSuccessMsg(`Loaded parse result for "${item.fileName}".`)
-    setError(null)
+    setParseError(null)
+    setAtsResult(null)
+    setCoverLetterResult(null)
+    setOptimizerResult(null)
     setShowSample(false)
     setSelectedFile(null)
     setSidebarOpen(false)
+    setActiveTab('summary')
   }
 
   // ── Clear History ──
@@ -845,55 +1364,793 @@ export default function Page() {
     try { localStorage.removeItem(HISTORY_KEY) } catch { /* ignore */ }
   }
 
-  // Display data: either parsed or sample
   const displayData = parsedData
+  const anyLoading = parsingLoading || atsLoading || coverLetterLoading || optimizerLoading
+
+  // Build tab list dynamically
+  const availableTabs: { value: string; label: string; icon: React.ReactNode }[] = [
+    { value: 'summary', label: 'Summary', icon: <FiUser className="w-3.5 h-3.5" /> },
+    { value: 'json', label: 'JSON', icon: <FiCode className="w-3.5 h-3.5" /> },
+  ]
+  if (atsResult) availableTabs.push({ value: 'ats', label: 'ATS Score', icon: <FiTarget className="w-3.5 h-3.5" /> })
+  if (coverLetterResult) availableTabs.push({ value: 'coverletter', label: 'Cover Letter', icon: <FiFileText className="w-3.5 h-3.5" /> })
+  if (optimizerResult) availableTabs.push({ value: 'optimized', label: 'Optimized', icon: <FiZap className="w-3.5 h-3.5" /> })
 
   return (
     <ErrorBoundary>
-      <div style={THEME_VARS} className="min-h-screen bg-background text-foreground font-sans" >
+      <div style={THEME_VARS} className="min-h-screen bg-background text-foreground font-sans">
         {/* Gradient Background Layer */}
         <div className="fixed inset-0 -z-10" style={{ background: 'linear-gradient(135deg, hsl(210 20% 97%) 0%, hsl(220 25% 95%) 35%, hsl(200 20% 96%) 70%, hsl(230 15% 97%) 100%)' }} />
 
         {/* ──── Header ──── */}
         <header className="sticky top-0 z-30 border-b border-border" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <FiFile className="w-4 h-4 text-primary-foreground" />
               </div>
               <h1 className="text-lg font-semibold tracking-tight">ResumeForge</h1>
+              <Badge variant="secondary" className="text-xs hidden sm:inline-flex">4 Agents</Badge>
             </div>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                 <span>Sample Data</span>
                 <Switch checked={showSample} onCheckedChange={setShowSample} />
               </label>
-              <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <FiClock className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex gap-6">
-          {/* ──── Sidebar (Parse History) ──── */}
-          <aside className={`${sidebarOpen ? 'fixed inset-0 z-40 bg-black/20 lg:bg-transparent lg:static lg:inset-auto' : 'hidden lg:block'} lg:w-64 flex-shrink-0`}>
-            <div className={`${sidebarOpen ? 'absolute right-0 top-0 h-full w-72 shadow-xl' : ''} lg:relative lg:w-full lg:shadow-none`} style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: sidebarOpen ? '0' : '0.875rem', border: sidebarOpen ? 'none' : '1px solid rgba(255,255,255,0.18)' }}>
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
+          {/* Inline Notifications */}
+          {parseError && (
+            <div className="mb-4 flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{parseError}</span>
+              <button onClick={() => setParseError(null)} className="ml-auto"><FiX className="w-4 h-4" /></button>
+            </div>
+          )}
+          {successMsg && !parseError && (
+            <div className="mb-4 flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+              <FiCheck className="w-4 h-4 flex-shrink-0" />
+              <span>{successMsg}</span>
+              <button onClick={() => setSuccessMsg(null)} className="ml-auto"><FiX className="w-4 h-4" /></button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* ──── Left Column: Upload + JD + Actions ──── */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Upload Card */}
+              <Card className="border shadow-md" style={GLASS_STYLE}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FiUpload className="w-4 h-4" />Upload Resume
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">Drag and drop or browse for a PDF or Word document.</p>
+                </CardHeader>
+                <CardContent>
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => !anyLoading && fileInputRef.current?.click()}
+                    className={`relative flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer ${isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : parseError ? 'border-red-300 bg-red-50/50' : 'border-border hover:border-primary/50 hover:bg-accent/50'} ${anyLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.docx,.doc"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) handleFileSelect(f)
+                      }}
+                    />
+                    {selectedFile ? (
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <FiFile className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</span>
+                            <Badge variant="secondary" className="text-xs">{selectedFile.name.split('.').pop()?.toUpperCase() ?? 'FILE'}</Badge>
+                          </div>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setParseError(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="p-1.5 rounded-md hover:bg-muted transition-colors">
+                          <FiX className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                          <FiUpload className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm font-medium mb-1">Drop your resume here</p>
+                        <p className="text-xs text-muted-foreground">or click to browse</p>
+                        <p className="text-xs text-muted-foreground mt-2">Supports PDF, DOCX</p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    <Button onClick={handleParse} disabled={!selectedFile || anyLoading} className="w-full h-10 font-medium" style={{ borderRadius: '0.875rem' }}>
+                      {parsingLoading ? (
+                        <span className="flex items-center gap-2"><Spinner />Parsing...</span>
+                      ) : (
+                        'Parse Resume'
+                      )}
+                    </Button>
+                    {displayData && (
+                      <Button variant="outline" onClick={handleReset} className="w-full h-10 font-medium" style={{ borderRadius: '0.875rem' }}>
+                        Parse Another
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Job Description Card */}
+              {displayData && (
+                <Card className="border shadow-md" style={GLASS_STYLE}>
+                  <CardHeader className="pb-2 cursor-pointer" onClick={() => setJdExpanded(!jdExpanded)}>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <FiFileText className="w-4 h-4" />Job Description
+                      </CardTitle>
+                      {jdExpanded ? <FiChevronUp className="w-4 h-4 text-muted-foreground" /> : <FiChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Optional for ATS Score, Required for Cover Letter & Optimizer</p>
+                  </CardHeader>
+                  {jdExpanded && (
+                    <CardContent className="pt-0">
+                      <Textarea
+                        placeholder="Paste the target job description here..."
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        rows={6}
+                        className="text-sm"
+                        style={{ borderRadius: '0.625rem' }}
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-muted-foreground">{jobDescription.length} characters</span>
+                        {jobDescription.trim() && (
+                          <button onClick={() => setJobDescription('')} className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1">
+                            <FiX className="w-3 h-3" />Clear
+                          </button>
+                        )}
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              )}
+
+              {/* Action Buttons */}
+              {displayData && (
+                <Card className="border shadow-md" style={GLASS_STYLE}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <HiSparkles className="w-4 h-4" />AI Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button
+                      onClick={handleATSAnalysis}
+                      disabled={anyLoading}
+                      variant="outline"
+                      className="w-full h-10 justify-start font-medium text-sm"
+                      style={{ borderRadius: '0.875rem' }}
+                    >
+                      {atsLoading ? (
+                        <span className="flex items-center gap-2"><Spinner />Analyzing...</span>
+                      ) : (
+                        <span className="flex items-center gap-2"><FiTarget className="w-4 h-4" />Analyze ATS Score {!jobDescription.trim() && <span className="text-xs text-muted-foreground ml-auto">(General)</span>}</span>
+                      )}
+                    </Button>
+
+                    {atsError && <p className="text-xs text-red-600 px-1">{atsError}</p>}
+
+                    <Button
+                      onClick={handleCoverLetter}
+                      disabled={anyLoading || !jobDescription.trim()}
+                      variant="outline"
+                      className="w-full h-10 justify-start font-medium text-sm"
+                      style={{ borderRadius: '0.875rem' }}
+                    >
+                      {coverLetterLoading ? (
+                        <span className="flex items-center gap-2"><Spinner />Generating...</span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <FiFileText className="w-4 h-4" />Generate Cover Letter
+                          {!jobDescription.trim() && <span className="text-xs text-muted-foreground ml-auto">Needs JD</span>}
+                        </span>
+                      )}
+                    </Button>
+
+                    {coverLetterError && <p className="text-xs text-red-600 px-1">{coverLetterError}</p>}
+
+                    <Button
+                      onClick={handleOptimize}
+                      disabled={anyLoading || !jobDescription.trim()}
+                      variant="outline"
+                      className="w-full h-10 justify-start font-medium text-sm"
+                      style={{ borderRadius: '0.875rem' }}
+                    >
+                      {optimizerLoading ? (
+                        <span className="flex items-center gap-2"><Spinner />Optimizing...</span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <FiZap className="w-4 h-4" />Optimize Resume
+                          {!jobDescription.trim() && <span className="text-xs text-muted-foreground ml-auto">Needs JD</span>}
+                        </span>
+                      )}
+                    </Button>
+
+                    {optimizerError && <p className="text-xs text-red-600 px-1">{optimizerError}</p>}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Copy/Download Parsed JSON */}
+              {displayData && rawJson && (
+                <Card className="border shadow-md" style={GLASS_STYLE}>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={handleCopy} className="flex-1 h-9 text-sm" style={{ borderRadius: '0.875rem' }}>
+                        {copied ? <><FiCheck className="w-3.5 h-3.5 mr-1.5" />Copied!</> : <><FiCopy className="w-3.5 h-3.5 mr-1.5" />Copy JSON</>}
+                      </Button>
+                      <Button variant="outline" onClick={handleDownload} className="flex-1 h-9 text-sm" style={{ borderRadius: '0.875rem' }}>
+                        <FiDownload className="w-3.5 h-3.5 mr-1.5" />Download .json
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Agent Status Card */}
+              <Card className="border shadow-sm" style={GLASS_STYLE}>
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-3">Powered by 4 AI Agents</p>
+                  <div className="space-y-2">
+                    {AGENTS_INFO.map((agent) => (
+                      <div key={agent.id} className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activeAgentId === agent.id ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                        <span className="text-xs font-medium flex-1">{agent.name}</span>
+                        <span className="text-xs text-muted-foreground">{activeAgentId === agent.id ? 'Processing...' : 'Ready'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* ──── Right Column: Output ──── */}
+            <div className="lg:col-span-3">
+              {parsingLoading ? (
+                <Card className="border shadow-md" style={GLASS_STYLE}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Spinner className="h-5 w-5" />
+                      <span className="text-sm font-medium">Parsing your resume...</span>
+                    </div>
+                    <LoadingSkeleton />
+                  </CardContent>
+                </Card>
+              ) : displayData ? (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h2 className="text-lg font-semibold flex-shrink-0">Results</h2>
+                    <TabsList className="h-9 flex-wrap" style={{ borderRadius: '0.875rem' }}>
+                      {availableTabs.map((tab) => (
+                        <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm px-2 sm:px-3 gap-1">
+                          {tab.icon}
+                          <span className="hidden sm:inline">{tab.label}</span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </div>
+
+                  {/* ──── Summary Tab ──── */}
+                  <TabsContent value="summary" className="mt-0">
+                    <Card className="border shadow-md" style={GLASS_STYLE}>
+                      <ScrollArea className="h-[calc(100vh-13rem)]">
+                        <CardContent className="pt-6">
+                          <ResumeSummaryView data={displayData} />
+                        </CardContent>
+                      </ScrollArea>
+                    </Card>
+                  </TabsContent>
+
+                  {/* ──── JSON Tab ──── */}
+                  <TabsContent value="json" className="mt-0">
+                    <Card className="border shadow-md overflow-hidden" style={GLASS_STYLE}>
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
+                        <span className="text-xs font-mono text-muted-foreground">parsed_resume.json</span>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 px-2 text-xs">
+                            {copied ? <><FiCheck className="w-3 h-3 mr-1" />Copied</> : <><FiCopy className="w-3 h-3 mr-1" />Copy</>}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={handleDownload} className="h-7 px-2 text-xs">
+                            <FiDownload className="w-3 h-3 mr-1" />Download
+                          </Button>
+                        </div>
+                      </div>
+                      <ScrollArea className="h-[calc(100vh-15rem)]">
+                        <pre className="p-4 text-xs font-mono leading-5 overflow-x-auto">
+                          {rawJson ? syntaxHighlightJson(rawJson) : null}
+                        </pre>
+                      </ScrollArea>
+                    </Card>
+                  </TabsContent>
+
+                  {/* ──── ATS Score Tab ──── */}
+                  {atsResult && (
+                    <TabsContent value="ats" className="mt-0">
+                      <Card className="border shadow-md" style={GLASS_STYLE}>
+                        <ScrollArea className="h-[calc(100vh-13rem)]">
+                          <CardContent className="pt-6 space-y-6">
+                            {/* Score Circle & Summary */}
+                            <div className="text-center">
+                              <h3 className="text-sm font-semibold mb-4 flex items-center justify-center gap-2">
+                                <FiTarget className="w-4 h-4" />ATS Compatibility Score
+                              </h3>
+                              <ScoreCircle score={atsResult?.overall_score ?? 0} />
+                              {atsResult?.summary && (
+                                <div className="mt-4 text-left p-4 rounded-lg bg-secondary/50">
+                                  {renderMarkdown(atsResult.summary)}
+                                </div>
+                              )}
+                            </div>
+
+                            <Separator />
+
+                            {/* Category Scores */}
+                            <section>
+                              <h3 className="text-sm font-semibold mb-3">Category Scores</h3>
+                              <div className="space-y-3">
+                                {atsResult?.category_scores && Object.entries(atsResult.category_scores).map(([key, value]) => (
+                                  <CategoryScoreBar key={key} label={key} score={typeof value === 'number' ? value : 0} />
+                                ))}
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Strengths */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiCheckCircle className="w-4 h-4 text-emerald-500" />Strengths
+                              </h3>
+                              <div className="space-y-2">
+                                {Array.isArray(atsResult?.strengths) && atsResult.strengths.length > 0 ? (
+                                  atsResult.strengths.map((s, i) => (
+                                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-100">
+                                      <FiCheck className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-emerald-800">{s}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">No strengths identified.</p>
+                                )}
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Weaknesses */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiAlertTriangle className="w-4 h-4 text-amber-500" />Weaknesses
+                              </h3>
+                              <div className="space-y-2">
+                                {Array.isArray(atsResult?.weaknesses) && atsResult.weaknesses.length > 0 ? (
+                                  atsResult.weaknesses.map((w, i) => (
+                                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 border border-amber-100">
+                                      <FiAlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-amber-800">{w}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">No weaknesses identified.</p>
+                                )}
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Suggestions */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiStar className="w-4 h-4 text-blue-500" />Suggestions
+                              </h3>
+                              <div className="space-y-3">
+                                {Array.isArray(atsResult?.suggestions) && atsResult.suggestions.length > 0 ? (
+                                  atsResult.suggestions.map((sug, i) => (
+                                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Badge className={`text-xs border ${getPriorityColor(sug?.priority ?? '')}`} variant="outline">
+                                          {sug?.priority ?? 'N/A'}
+                                        </Badge>
+                                        <span className="text-xs font-medium text-muted-foreground">{sug?.category ?? 'General'}</span>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                                        <div className="p-2 rounded bg-red-50 border border-red-100">
+                                          <p className="text-xs font-medium text-red-600 mb-1">Current</p>
+                                          <p className="text-xs text-red-800">{sug?.current ?? ''}</p>
+                                        </div>
+                                        <div className="p-2 rounded bg-emerald-50 border border-emerald-100">
+                                          <p className="text-xs font-medium text-emerald-600 mb-1">Recommended</p>
+                                          <p className="text-xs text-emerald-800">{sug?.recommended ?? ''}</p>
+                                        </div>
+                                      </div>
+                                      {sug?.impact && (
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <FiTrendingUp className="w-3 h-3" />Impact: {sug.impact}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">No suggestions available.</p>
+                                )}
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Keyword Analysis */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiCode className="w-4 h-4" />Keyword Analysis
+                              </h3>
+
+                              {atsResult?.keyword_analysis?.keyword_density_score != null && (
+                                <div className="mb-4">
+                                  <CategoryScoreBar label="Keyword Density Score" score={typeof atsResult.keyword_analysis.keyword_density_score === 'number' ? atsResult.keyword_analysis.keyword_density_score : 0} />
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-medium text-emerald-600 mb-2">Matched Keywords</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(atsResult?.keyword_analysis?.matched_keywords) && atsResult.keyword_analysis.matched_keywords.length > 0 ? (
+                                      atsResult.keyword_analysis.matched_keywords.map((kw, i) => (
+                                        <Badge key={i} className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">{kw}</Badge>
+                                      ))
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">None</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium text-amber-600 mb-2">Missing Keywords</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(atsResult?.keyword_analysis?.missing_keywords) && atsResult.keyword_analysis.missing_keywords.length > 0 ? (
+                                      atsResult.keyword_analysis.missing_keywords.map((kw, i) => (
+                                        <Badge key={i} className="text-xs bg-amber-100 text-amber-700 border-amber-200" variant="outline">{kw}</Badge>
+                                      ))
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">None</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </section>
+                          </CardContent>
+                        </ScrollArea>
+                      </Card>
+                    </TabsContent>
+                  )}
+
+                  {/* ──── Cover Letter Tab ──── */}
+                  {coverLetterResult && (
+                    <TabsContent value="coverletter" className="mt-0">
+                      <Card className="border shadow-md" style={GLASS_STYLE}>
+                        <ScrollArea className="h-[calc(100vh-13rem)]">
+                          <CardContent className="pt-6 space-y-6">
+                            {/* Actions */}
+                            <div className="flex gap-2">
+                              <Button variant="outline" onClick={handleCopyCoverLetter} className="h-8 text-xs" style={{ borderRadius: '0.875rem' }}>
+                                {copiedCoverLetter ? <><FiCheck className="w-3 h-3 mr-1" />Copied!</> : <><FiCopy className="w-3 h-3 mr-1" />Copy</>}
+                              </Button>
+                              <Button variant="outline" onClick={handleDownloadCoverLetter} className="h-8 text-xs" style={{ borderRadius: '0.875rem' }}>
+                                <FiDownload className="w-3 h-3 mr-1" />Download .txt
+                              </Button>
+                              {coverLetterResult?.tone && (
+                                <Badge variant="secondary" className="ml-auto text-xs">{coverLetterResult.tone}</Badge>
+                              )}
+                              {coverLetterResult?.word_count != null && (
+                                <Badge variant="outline" className="text-xs">{coverLetterResult.word_count} words</Badge>
+                              )}
+                            </div>
+
+                            {/* Cover Letter Content */}
+                            <div className="p-6 rounded-xl border border-border bg-white shadow-sm">
+                              {coverLetterResult?.cover_letter ? (
+                                <div className="space-y-4 text-sm leading-relaxed font-serif">
+                                  {coverLetterResult.cover_letter.split('\n\n').map((paragraph, i) => (
+                                    <div key={i}>
+                                      {paragraph.split('\n').map((line, j) => (
+                                        <p key={j} className={j > 0 ? 'mt-1' : ''}>{line}</p>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">No cover letter content generated.</p>
+                              )}
+                            </div>
+
+                            <Separator />
+
+                            {/* Key Highlights */}
+                            {Array.isArray(coverLetterResult?.key_highlights) && coverLetterResult.key_highlights.length > 0 && (
+                              <section>
+                                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                  <FiStar className="w-4 h-4 text-amber-500" />Key Highlights
+                                </h3>
+                                <ul className="space-y-2">
+                                  {coverLetterResult.key_highlights.map((h, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm">
+                                      <FiCheck className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                      <span>{h}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </section>
+                            )}
+
+                            {/* Matched Qualifications */}
+                            {Array.isArray(coverLetterResult?.matched_qualifications) && coverLetterResult.matched_qualifications.length > 0 && (
+                              <>
+                                <Separator />
+                                <section>
+                                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                    <FiCheckCircle className="w-4 h-4 text-emerald-500" />Matched Qualifications
+                                  </h3>
+                                  <div className="flex flex-wrap gap-2">
+                                    {coverLetterResult.matched_qualifications.map((q, i) => (
+                                      <Badge key={i} className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">{q}</Badge>
+                                    ))}
+                                  </div>
+                                </section>
+                              </>
+                            )}
+
+                            {/* Customization Notes */}
+                            {Array.isArray(coverLetterResult?.customization_notes) && coverLetterResult.customization_notes.length > 0 && (
+                              <>
+                                <Separator />
+                                <section>
+                                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                    <FiFileText className="w-4 h-4 text-blue-500" />Customization Notes
+                                  </h3>
+                                  <ul className="space-y-2">
+                                    {coverLetterResult.customization_notes.map((n, i) => (
+                                      <li key={i} className="flex items-start gap-2 text-sm">
+                                        <FiAlertCircle className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                                        <span>{n}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </section>
+                              </>
+                            )}
+                          </CardContent>
+                        </ScrollArea>
+                      </Card>
+                    </TabsContent>
+                  )}
+
+                  {/* ──── Optimized Resume Tab ──── */}
+                  {optimizerResult && (
+                    <TabsContent value="optimized" className="mt-0">
+                      <Card className="border shadow-md" style={GLASS_STYLE}>
+                        <ScrollArea className="h-[calc(100vh-13rem)]">
+                          <CardContent className="pt-6 space-y-6">
+                            {/* Improvement Banner */}
+                            {optimizerResult?.ats_improvement_estimate && (
+                              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-emerald-50 border border-emerald-200">
+                                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                  <FiTrendingUp className="w-4 h-4 text-emerald-600" />ATS Score Improvement
+                                </h3>
+                                <div className="flex items-center justify-center gap-4">
+                                  <div className="text-center">
+                                    <p className="text-2xl font-bold text-amber-600">{optimizerResult.ats_improvement_estimate?.original_estimated_score ?? '?'}</p>
+                                    <p className="text-xs text-muted-foreground">Original</p>
+                                  </div>
+                                  <FiArrowRight className="w-6 h-6 text-muted-foreground" />
+                                  <div className="text-center">
+                                    <p className="text-2xl font-bold text-emerald-600">{optimizerResult.ats_improvement_estimate?.optimized_estimated_score ?? '?'}</p>
+                                    <p className="text-xs text-muted-foreground">Optimized</p>
+                                  </div>
+                                  <div className="ml-4 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-200">
+                                    <span className="text-sm font-bold text-emerald-700">+{optimizerResult.ats_improvement_estimate?.improvement_points ?? 0} pts</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Optimization Summary */}
+                            {optimizerResult?.optimization_summary && (
+                              <section>
+                                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                  <HiSparkles className="w-4 h-4 text-blue-500" />Optimization Summary
+                                </h3>
+                                <div className="p-4 rounded-lg bg-secondary/50">
+                                  {renderMarkdown(optimizerResult.optimization_summary)}
+                                </div>
+                              </section>
+                            )}
+
+                            <Separator />
+
+                            {/* Keywords */}
+                            <section>
+                              <h3 className="text-sm font-semibold mb-3">Keywords</h3>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-medium text-emerald-600 mb-2">Keywords Added</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(optimizerResult?.keywords_added) && optimizerResult.keywords_added.length > 0 ? (
+                                      optimizerResult.keywords_added.map((kw, i) => (
+                                        <Badge key={i} className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">{kw}</Badge>
+                                      ))
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">None</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium text-blue-600 mb-2">Keywords Emphasized</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(optimizerResult?.keywords_emphasized) && optimizerResult.keywords_emphasized.length > 0 ? (
+                                      optimizerResult.keywords_emphasized.map((kw, i) => (
+                                        <Badge key={i} className="text-xs bg-blue-100 text-blue-700 border-blue-200" variant="outline">{kw}</Badge>
+                                      ))
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">None</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Changes Made */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiCode className="w-4 h-4" />Changes Made
+                              </h3>
+                              <div className="space-y-3">
+                                {Array.isArray(optimizerResult?.changes_made) && optimizerResult.changes_made.length > 0 ? (
+                                  optimizerResult.changes_made.map((change, i) => (
+                                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                                      <Badge variant="secondary" className="text-xs mb-2">{change?.section ?? 'Unknown Section'}</Badge>
+                                      <div className="grid grid-cols-1 gap-2 mt-2">
+                                        <div className="p-2 rounded bg-red-50 border border-red-100">
+                                          <p className="text-xs font-medium text-red-600 mb-1">Original</p>
+                                          <p className="text-xs text-red-800">{change?.original ?? ''}</p>
+                                        </div>
+                                        <div className="p-2 rounded bg-emerald-50 border border-emerald-100">
+                                          <p className="text-xs font-medium text-emerald-600 mb-1">Optimized</p>
+                                          <p className="text-xs text-emerald-800">{change?.optimized ?? ''}</p>
+                                        </div>
+                                      </div>
+                                      {change?.reason && (
+                                        <p className="text-xs text-muted-foreground mt-2 flex items-start gap-1">
+                                          <FiAlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                          <span>{change.reason}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">No changes recorded.</p>
+                                )}
+                              </div>
+                            </section>
+
+                            <Separator />
+
+                            {/* Actions */}
+                            <div className="flex gap-2">
+                              <Button variant="outline" onClick={handleCopyOptimized} className="h-8 text-xs" style={{ borderRadius: '0.875rem' }}>
+                                {copiedOptimized ? <><FiCheck className="w-3 h-3 mr-1" />Copied!</> : <><FiCopy className="w-3 h-3 mr-1" />Copy Optimized JSON</>}
+                              </Button>
+                              <Button variant="outline" onClick={handleDownloadOptimized} className="h-8 text-xs" style={{ borderRadius: '0.875rem' }}>
+                                <FiDownload className="w-3 h-3 mr-1" />Download .json
+                              </Button>
+                            </div>
+
+                            <Separator />
+
+                            {/* Optimized Resume Preview */}
+                            <section>
+                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                                <FiFileText className="w-4 h-4" />Optimized Resume Preview
+                              </h3>
+                              {optimizerResult?.optimized_resume ? (
+                                <div className="p-4 rounded-lg border border-border bg-white">
+                                  <ResumeSummaryView data={optimizerResult.optimized_resume} />
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">No optimized resume data available.</p>
+                              )}
+                            </section>
+                          </CardContent>
+                        </ScrollArea>
+                      </Card>
+                    </TabsContent>
+                  )}
+                </Tabs>
+              ) : (
+                /* ──── Empty State ──── */
+                <Card className="border shadow-md" style={GLASS_STYLE}>
+                  <CardContent className="flex flex-col items-center justify-center py-24">
+                    <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-5">
+                      <FiFile className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Upload a resume to get started</h3>
+                    <p className="text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
+                      Drop a PDF or Word document in the upload zone to extract structured, ATS-optimized data. Then analyze your ATS score, generate cover letters, and optimize your resume.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 mt-6">
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1"><FiTarget className="w-3 h-3" />ATS Scoring</Badge>
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1"><FiFileText className="w-3 h-3" />Cover Letters</Badge>
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1"><FiZap className="w-3 h-3" />Resume Optimization</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Or toggle "Sample Data" to preview all features.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Loading overlays for secondary agents */}
+              {(atsLoading || coverLetterLoading || optimizerLoading) && displayData && (
+                <div className="mt-4">
+                  <Card className="border shadow-md" style={GLASS_STYLE}>
+                    <CardContent className="py-8 flex flex-col items-center justify-center">
+                      <Spinner className="h-6 w-6 mb-3" />
+                      <p className="text-sm font-medium">
+                        {atsLoading && 'Analyzing ATS compatibility...'}
+                        {coverLetterLoading && 'Generating your cover letter...'}
+                        {optimizerLoading && 'Optimizing your resume...'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">This may take a minute.</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ──── Sidebar (Parse History) ──── */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setSidebarOpen(false)}>
+            <div className="absolute right-0 top-0 h-full w-72 shadow-xl border-l border-border" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }} onClick={(e) => e.stopPropagation()}>
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-semibold flex items-center gap-2"><FiClock className="w-4 h-4" />Parse History</h2>
-                {sidebarOpen && (
-                  <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="lg:hidden">
-                    <FiX className="w-4 h-4" />
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
+                  <FiX className="w-4 h-4" />
+                </Button>
               </div>
-              <ScrollArea className="h-[calc(100vh-14rem)] lg:h-[calc(100vh-12rem)]">
+              <ScrollArea className="h-[calc(100vh-8rem)]">
                 <div className="p-3 space-y-2">
                   {history.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-8">No parse history yet.</p>
                   ) : (
                     history.map((item) => (
-                      <button key={item.id} onClick={() => loadHistoryItem(item)} className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors duration-200 group">
+                      <button key={item.id} onClick={() => loadHistoryItem(item)} className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors duration-200">
                         <div className="flex items-center gap-2 mb-1">
                           <FiFile className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm font-medium truncate">{item.fileName}</span>
@@ -915,286 +2172,8 @@ export default function Page() {
                 </div>
               )}
             </div>
-          </aside>
-
-          {/* ──── Main Content ──── */}
-          <main className="flex-1 min-w-0">
-            {/* Inline Notifications */}
-            {error && (
-              <div className="mb-4 flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{error}</span>
-                <button onClick={() => setError(null)} className="ml-auto"><FiX className="w-4 h-4" /></button>
-              </div>
-            )}
-            {successMsg && !error && (
-              <div className="mb-4 flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
-                <FiCheck className="w-4 h-4 flex-shrink-0" />
-                <span>{successMsg}</span>
-                <button onClick={() => setSuccessMsg(null)} className="ml-auto"><FiX className="w-4 h-4" /></button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* ──── Left Column: Upload ──── */}
-              <div className="lg:col-span-2 space-y-4">
-                <Card className="border shadow-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FiUpload className="w-4 h-4" />Upload Resume
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground">Drag and drop or browse for a PDF or Word document.</p>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Dropzone */}
-                    <div
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onClick={() => !loading && fileInputRef.current?.click()}
-                      className={`relative flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer ${isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : error ? 'border-red-300 bg-red-50/50' : 'border-border hover:border-primary/50 hover:bg-accent/50'} ${loading ? 'opacity-50 pointer-events-none' : ''}`}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.docx,.doc"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleFileSelect(f)
-                        }}
-                      />
-                      {selectedFile ? (
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <FiFile className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</span>
-                              <Badge variant="secondary" className="text-xs">{selectedFile.name.split('.').pop()?.toUpperCase() ?? 'FILE'}</Badge>
-                            </div>
-                          </div>
-                          <button onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setError(null); if (fileInputRef.current) fileInputRef.current.value = '' }} className="p-1.5 rounded-md hover:bg-muted transition-colors">
-                            <FiX className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                            <FiUpload className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                          <p className="text-sm font-medium mb-1">Drop your resume here</p>
-                          <p className="text-xs text-muted-foreground">or click to browse</p>
-                          <p className="text-xs text-muted-foreground mt-2">Supports PDF, DOCX</p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-4 space-y-2">
-                      <Button onClick={handleParse} disabled={!selectedFile || loading} className="w-full h-10 font-medium" style={{ borderRadius: '0.875rem' }}>
-                        {loading ? (
-                          <span className="flex items-center gap-2">
-                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                            Parsing...
-                          </span>
-                        ) : (
-                          'Parse Resume'
-                        )}
-                      </Button>
-                      {displayData && (
-                        <Button variant="outline" onClick={handleReset} className="w-full h-10 font-medium" style={{ borderRadius: '0.875rem' }}>
-                          Parse Another
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Action Buttons Card (when data available) */}
-                {displayData && rawJson && (
-                  <Card className="border shadow-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleCopy} className="flex-1 h-9 text-sm" style={{ borderRadius: '0.875rem' }}>
-                          {copied ? <><FiCheck className="w-3.5 h-3.5 mr-1.5" />Copied!</> : <><FiCopy className="w-3.5 h-3.5 mr-1.5" />Copy JSON</>}
-                        </Button>
-                        <Button variant="outline" onClick={handleDownload} className="flex-1 h-9 text-sm" style={{ borderRadius: '0.875rem' }}>
-                          <FiDownload className="w-3.5 h-3.5 mr-1.5" />Download .json
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Agent Info Card */}
-                <Card className="border shadow-sm" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Powered by</p>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${activeAgentId ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
-                      <span className="text-sm font-medium">Resume Parser Agent</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{activeAgentId ? 'Processing...' : 'Ready'}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">Extracts structured fields from resumes including contact info, skills, experience, education, certifications, languages, and projects.</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* ──── Right Column: Output ──── */}
-              <div className="lg:col-span-3">
-                {loading ? (
-                  <Card className="border shadow-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                    <CardContent className="pt-6">
-                      <LoadingSkeleton />
-                    </CardContent>
-                  </Card>
-                ) : displayData ? (
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-lg font-semibold">Parsed Profile</h2>
-                      <TabsList className="h-9" style={{ borderRadius: '0.875rem' }}>
-                        <TabsTrigger value="summary" className="text-sm px-4">Summary</TabsTrigger>
-                        <TabsTrigger value="json" className="text-sm px-4">JSON</TabsTrigger>
-                      </TabsList>
-                    </div>
-
-                    {/* ──── Summary Tab ──── */}
-                    <TabsContent value="summary" className="mt-0">
-                      <Card className="border shadow-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                        <ScrollArea className="h-[calc(100vh-13rem)]">
-                          <CardContent className="pt-6 space-y-6">
-                            {/* Contact Info */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiUser className="w-4 h-4 text-muted-foreground" />Contact Information
-                              </h3>
-                              <ContactInfoSection contact={displayData?.contact_info} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Professional Summary */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiBookOpen className="w-4 h-4 text-muted-foreground" />Professional Summary
-                              </h3>
-                              {displayData?.professional_summary ? (
-                                renderMarkdown(displayData.professional_summary)
-                              ) : (
-                                <p className="text-sm text-muted-foreground italic">No professional summary provided.</p>
-                              )}
-                            </section>
-
-                            <Separator />
-
-                            {/* Skills */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiCode className="w-4 h-4 text-muted-foreground" />Skills
-                              </h3>
-                              <SkillsSection skills={displayData?.skills} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Work Experience */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiBriefcase className="w-4 h-4 text-muted-foreground" />Work Experience
-                              </h3>
-                              <ExperienceSection experience={displayData?.work_experience} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Education */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiBookOpen className="w-4 h-4 text-muted-foreground" />Education
-                              </h3>
-                              <EducationSection education={displayData?.education} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Certifications */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiAward className="w-4 h-4 text-muted-foreground" />Certifications
-                              </h3>
-                              <CertificationsSection certifications={displayData?.certifications} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Languages */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiGlobe className="w-4 h-4 text-muted-foreground" />Languages
-                              </h3>
-                              <LanguagesSection languages={displayData?.languages} />
-                            </section>
-
-                            <Separator />
-
-                            {/* Projects */}
-                            <section>
-                              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                                <FiCode className="w-4 h-4 text-muted-foreground" />Projects
-                              </h3>
-                              <ProjectsSection projects={displayData?.projects} />
-                            </section>
-                          </CardContent>
-                        </ScrollArea>
-                      </Card>
-                    </TabsContent>
-
-                    {/* ──── JSON Tab ──── */}
-                    <TabsContent value="json" className="mt-0">
-                      <Card className="border shadow-md overflow-hidden" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
-                          <span className="text-xs font-mono text-muted-foreground">parsed_resume.json</span>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 px-2 text-xs">
-                              {copied ? <><FiCheck className="w-3 h-3 mr-1" />Copied</> : <><FiCopy className="w-3 h-3 mr-1" />Copy</>}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={handleDownload} className="h-7 px-2 text-xs">
-                              <FiDownload className="w-3 h-3 mr-1" />Download
-                            </Button>
-                          </div>
-                        </div>
-                        <ScrollArea className="h-[calc(100vh-15rem)]">
-                          <pre className="p-4 text-xs font-mono leading-5 overflow-x-auto">
-                            {rawJson ? syntaxHighlightJson(rawJson) : null}
-                          </pre>
-                        </ScrollArea>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
-                ) : (
-                  /* ──── Empty State ──── */
-                  <Card className="border shadow-md" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.18)', borderRadius: '0.875rem' }}>
-                    <CardContent className="flex flex-col items-center justify-center py-24">
-                      <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-5">
-                        <FiFile className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">Upload a resume to get started</h3>
-                      <p className="text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
-                        Drop a PDF or Word document in the upload zone to extract structured, ATS-optimized data from any resume.
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-4">
-                        Or toggle "Sample Data" to preview the output format.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-          </main>
-        </div>
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   )
