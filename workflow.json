@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "input_node",
+      "type": "Input",
+      "label": "Resume Upload",
+      "nodeCategory": "input"
+    },
+    {
+      "id": "resume_parser_agent",
+      "type": "Agent",
+      "label": "Resume Parser Agent",
+      "nodeCategory": "agent"
+    },
+    {
+      "id": "output_node",
+      "type": "Output",
+      "label": "Parsed JSON Profile",
+      "nodeCategory": "end"
+    }
+  ],
+  "edges": [
+    {
+      "source": "input_node",
+      "target": "resume_parser_agent"
+    },
+    {
+      "source": "resume_parser_agent",
+      "target": "output_node"
+    }
+  ]
+}
